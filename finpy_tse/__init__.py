@@ -1980,8 +1980,8 @@ def Get_MarketWatch(save_excel = True, save_path = 'D:/FinPy-TSE Data/MarketWatc
         try:
             if(save_path[-1] != '/'):
                 save_path = save_path+'/'
-            mkt_watch_file_name = 'MarketWatch '+jdatetime.datetime.today().strftime("%Y-%m-%d %H-%M-%S")
-            OB_file_name = 'OrderBook '+jdatetime.datetime.today().strftime("%Y-%m-%d %H-%M-%S")
+            mkt_watch_file_name = 'MarketWatch'
+            OB_file_name = 'OrderBook'
             final_OB_df.to_excel(save_path+OB_file_name+'.xlsx')
             final_df.to_excel(save_path+mkt_watch_file_name+'.xlsx')
         except:
