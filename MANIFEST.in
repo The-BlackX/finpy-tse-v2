@@ -1,1 +1,1 @@
-include data/usd_history.csv
+include finpy_tse/data/usd_history.csv

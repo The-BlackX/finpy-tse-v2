@@ -6,7 +6,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 setuptools.setup(
     name='finpy_tse',
     packages=['finpy_tse'],
-    version='1.2.13',
+    version='1.2.2', 
     license='BSD (3-clause)',
     description='A Python Module to Access Tehran Stock Exchange Historical and Real-Time Data',
     long_description=long_description,
