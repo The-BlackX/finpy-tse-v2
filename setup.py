@@ -1,13 +1,12 @@
 import setuptools
 
-# Reads the content of your README.md into a variable to be used in the setup below
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name='finpy_tse',                           
-    packages=['finpy_tse'],                     
-    version='1.2.12',                         
+    name='finpy_tse',
+    packages=['finpy_tse'],
+    version='1.2.13',
     license='BSD (3-clause)',
     description='A Python Module to Access Tehran Stock Exchange Historical and Real-Time Data',
     long_description=long_description,
@@ -16,7 +15,7 @@ setuptools.setup(
     author_email='a.rahimi.aut@gmail.com',
     install_requires=['requests', 'jdatetime', 'pandas', 'numpy', 'bs4', 'asyncio', 'urllib3', 'aiohttp', 'unsync', 'IPython', 'persiantools', 'datetime', 'XlsxWriter', 'lxml'],
     package_data={
-        'finpy_tse': ['data/usd_history.csv'],  
+        'finpy_tse': ['data/usd_history.csv'],
     },
-    include_package_data=True,                  
+    include_package_data=True,
 )
