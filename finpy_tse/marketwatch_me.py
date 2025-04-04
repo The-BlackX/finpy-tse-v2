@@ -14,6 +14,8 @@ def get_marketwatch_me(output="dataframe", filename="MarketWatch", add_timestamp
     Mkt_df = Mkt_df.iloc[:, :23]
     Mkt_df.columns = ['WEB-ID', 'Ticker-Code', 'Symbol', 'Name', 'Time', 'Open', 'Final', 'Close', 'Count', 'Volume', 'Value',
                       'Low', 'High', 'Yesterday', 'EPS', 'Base_Vol', 'Unk1', 'Unk2', 'Sector', 'Day_UL', 'Day_LL', 'Share_No', 'Market']
+    Mkt_df['WEB-ID'] = Mkt_df['WEB-ID'].apply(lambda x: x.strip())
+    print("Mkt_df WEB-ID sample:", Mkt_df['WEB-ID'].head())  # چک کردن WEB-ID
     
     # Order book data (depth 1)
     OB_df = pd.DataFrame((main_text.split('@')[3]).split(';'))
@@ -23,13 +25,13 @@ def get_marketwatch_me(output="dataframe", filename="MarketWatch", add_timestamp
     for col in ['Sell-No', 'Sell-Vol', 'Sell-Price', 'Buy-Price', 'Buy-Vol', 'Buy-No']:
         OB_df[col] = pd.to_numeric(OB_df[col], errors='coerce')
     OB_df['WEB-ID'] = OB_df['WEB-ID'].apply(lambda x: x.strip())
+    print("OB_df WEB-ID sample:", OB_df['WEB-ID'].head())  # چک کردن WEB-ID
     
     # Merge market and OB data
-    Mkt_df['WEB-ID'] = Mkt_df['WEB-ID'].apply(lambda x: x.strip())
     Mkt_df['Symbol'] = Mkt_df['Symbol'].apply(lambda x: str(x).replace('ي', 'ی').replace('ك', 'ک'))
     Mkt_df = Mkt_df.set_index('WEB-ID')
     OB_df = OB_df.set_index('WEB-ID')
-    final_df = Mkt_df.join(OB_df).reset_index(drop=False)
+    final_df = Mkt_df.join(OB_df, how='left').reset_index(drop=False)
     
     numeric_cols = ['Open', 'Final', 'Close', 'Count', 'Volume', 'Value', 'Low', 'High', 'Yesterday', 'EPS', 
                     'Base_Vol', 'Share_No', 'Day_UL', 'Day_LL']
@@ -37,22 +39,19 @@ def get_marketwatch_me(output="dataframe", filename="MarketWatch", add_timestamp
     
     # Client type data
     r_client = requests.get('http://old.tsetmc.com/tsev2/data/ClientTypeAll.aspx', headers=headers)
-    print("ClientTypeAll Status:", r_client.status_code)  # چک کردن وضعیت درخواست
-    print("ClientTypeAll Raw Data Sample:", r_client.text[:100])  # نمونه داده خام
     Client_df = pd.DataFrame(r_client.text.split(';'))
     Client_df = Client_df[0].str.split(",", expand=True)
-    print("Client_df columns before naming:", Client_df.shape[1])  # تعداد ستون‌ها
     Client_df.columns = ['WEB-ID', 'R_Buy_C', 'Co_Buy_C', 'R_Buy_Vol', 'Co_Buy_Vol', 
                          'R_Sell_C', 'Co_Sell_C', 'R_Sell_Vol', 'Co_Sell_Vol']
     Client_df['WEB-ID'] = Client_df['WEB-ID'].apply(lambda x: x.strip())
+    print("Client_df WEB-ID sample:", Client_df['WEB-ID'].head())  # چک کردن WEB-ID
     Client_df = Client_df.set_index('WEB-ID')
     for col in ['R_Buy_C', 'Co_Buy_C', 'R_Buy_Vol', 'Co_Buy_Vol', 'R_Sell_C', 'Co_Sell_C', 'R_Sell_Vol', 'Co_Sell_Vol']:
         Client_df[col] = pd.to_numeric(Client_df[col], errors='coerce')
-    print("Client_df sample:", Client_df.head())  # چک کردن دیتافریم کلاینت
     
     # Join with Client data
-    final_df = final_df.join(Client_df).reset_index(drop=False)
-    print("Final_df sample after join:", final_df[['WEB-ID', 'R_Buy_C', 'Co_Buy_C', 'R_Buy_Vol', 'Co_Buy_Vol']].head())
+    final_df = final_df.join(Client_df, how='left').reset_index(drop=False)
+    print("Final_df after client join:", final_df[['WEB-ID', 'R_Buy_C', 'Co_Buy_C', 'R_Buy_Vol', 'Co_Buy_Vol']].head())
     
     # Add Trade_Type
     final_df['Trade_Type'] = final_df['Symbol'].apply(lambda x: 'تابلو' if ((not x[-1].isdigit()) or (x in ['انرژی1', 'انرژی2', 'انرژی3'])) 
@@ -86,7 +85,3 @@ def get_marketwatch_me(output="dataframe", filename="MarketWatch", add_timestamp
         final_df.to_excel(excel_file, index=False)
 
     return final_df
-
-if __name__ == '__main__':
-    save_path = 'D:\\stock-db\\other'
-    df = get_marketwatch_me(output="excel", filename="MarketWatch", add_timestamp=True, save_path=save_path)
