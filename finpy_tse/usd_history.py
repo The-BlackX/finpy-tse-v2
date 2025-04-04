@@ -1,9 +1,16 @@
-import requests
+# finpy_tse/usd_history.py
+import pandas as pd
+import os
 
-url = 'http://tsetmc.com/tsev2/data/MarketWatchPlus.aspx'
-headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
-
-response = requests.get(url, headers=headers)
-print("Status Code:", response.status_code)
-print("First 500 characters of response:")
-print(response.text[:500])
+def Get_USD_History():
+    """
+    Load historical USD data from the embedded usd_history.csv file.
+    Returns a DataFrame with historical USD data.
+    """
+    file_path = os.path.join(os.path.dirname(__file__), 'data', 'usd_history.csv')
+    try:
+        df = pd.read_csv(file_path, encoding='utf-8-sig')
+        df['Date'] = pd.to_datetime(df['Date']).dt.date
+        return df
+    except Exception as e:
+        raise Exception(f"Error loading USD history data: {e}")
