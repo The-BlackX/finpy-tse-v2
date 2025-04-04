@@ -36,25 +36,32 @@ def get_marketwatch_me(output="dataframe", filename="MarketWatch", add_timestamp
     final_df[numeric_cols] = final_df[numeric_cols].apply(pd.to_numeric, errors='coerce')
     
     # Client type data
-    r = requests.get('http://old.tsetmc.com/tsev2/data/ClientTypeAll.aspx', headers=headers)
-    Client_df = pd.DataFrame(r.text.split(';'))
+    r_client = requests.get('http://old.tsetmc.com/tsev2/data/ClientTypeAll.aspx', headers=headers)
+    print("ClientTypeAll Status:", r_client.status_code)  # چک کردن وضعیت درخواست
+    print("ClientTypeAll Raw Data Sample:", r_client.text[:100])  # نمونه داده خام
+    Client_df = pd.DataFrame(r_client.text.split(';'))
     Client_df = Client_df[0].str.split(",", expand=True)
+    print("Client_df columns before naming:", Client_df.shape[1])  # تعداد ستون‌ها
     Client_df.columns = ['WEB-ID', 'R_Buy_C', 'Co_Buy_C', 'R_Buy_Vol', 'Co_Buy_Vol', 
                          'R_Sell_C', 'Co_Sell_C', 'R_Sell_Vol', 'Co_Sell_Vol']
     Client_df['WEB-ID'] = Client_df['WEB-ID'].apply(lambda x: x.strip())
     Client_df = Client_df.set_index('WEB-ID')
     for col in ['R_Buy_C', 'Co_Buy_C', 'R_Buy_Vol', 'Co_Buy_Vol', 'R_Sell_C', 'Co_Sell_C', 'R_Sell_Vol', 'Co_Sell_Vol']:
         Client_df[col] = pd.to_numeric(Client_df[col], errors='coerce')
+    print("Client_df sample:", Client_df.head())  # چک کردن دیتافریم کلاینت
+    
+    # Join with Client data
     final_df = final_df.join(Client_df).reset_index(drop=False)
+    print("Final_df sample after join:", final_df[['WEB-ID', 'R_Buy_C', 'Co_Buy_C', 'R_Buy_Vol', 'Co_Buy_Vol']].head())
     
     # Add Trade_Type
     final_df['Trade_Type'] = final_df['Symbol'].apply(lambda x: 'تابلو' if ((not x[-1].isdigit()) or (x in ['انرژی1', 'انرژی2', 'انرژی3'])) 
                                              else ('بلوکی' if x[-1] == '2' else ('عمده' if x[-1] == '4' else ('جبرانی' if x[-1] == '3' else 'تابلو'))))
     
-    # Add Download after all processing
+    # Add Download
     final_df['Download'] = jdatetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     
-    # Column order with Download as the last column
+    # Column order
     columns_order = [
         'Symbol', 'Open', 'High', 'Low', 'Close', 'Final', 'Yesterday', 'Day_UL', 'Day_LL',
         'Count', 'Volume', 'Value', 'R_Buy_C', 'Co_Buy_C', 'R_Buy_Vol', 'Co_Buy_Vol',
@@ -79,3 +86,7 @@ def get_marketwatch_me(output="dataframe", filename="MarketWatch", add_timestamp
         final_df.to_excel(excel_file, index=False)
 
     return final_df
+
+if __name__ == '__main__':
+    save_path = 'D:\\stock-db\\other'
+    df = get_marketwatch_me(output="excel", filename="MarketWatch", add_timestamp=True, save_path=save_path)
