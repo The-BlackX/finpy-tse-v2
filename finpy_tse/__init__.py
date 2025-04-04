@@ -23,6 +23,7 @@ from IPython.display import clear_output
 from .usd_history import Get_USD_History
 from .marketwatch_me import get_marketwatch_me
 from .orderbook_me import get_orderbook_me
+from .get_all_index_me import get_all_index_me
 
 
 headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
