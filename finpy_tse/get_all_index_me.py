@@ -1,3 +1,6 @@
+import sys
+import time
+import concurrent.futures
 import pandas as pd
 import requests
 import jdatetime
@@ -93,7 +96,7 @@ def fetch_index_data_to_dataframe(web_id, index_name):
             df_merged.insert(0, 'Index', index_name)
             df_merged['Date'] = df_merged['Date'].dt.date
             
-            time.sleep(1)
+            time.sleep(1)  # تأخیر برای کاهش فشار روی سرور
             return df_merged
         
         except Exception as e:
@@ -105,12 +108,34 @@ def fetch_index_data_to_dataframe(web_id, index_name):
 
 def get_all_index_me():
     """
-    Fetch all index data sequentially and return as a DataFrame.
+    Fetch all index data concurrently using threads and return as a DataFrame.
     :return: DataFrame with all index data
     """
     all_index_df = pd.DataFrame()
-    for index_name, web_id in zip(sector_list, sector_web_id):
-        df_temp = fetch_index_data_to_dataframe(web_id, index_name)
-        if not df_temp.empty:
-            all_index_df = pd.concat([all_index_df, df_temp], ignore_index=True)
+    max_workers = min(3, len(sector_list))  # حداکثر ۳ درخواست همزمان
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+        future_to_index = {
+            executor.submit(fetch_index_data_to_dataframe, web_id, index_name): index_name
+            for index_name, web_id in zip(sector_list, sector_web_id)
+        }
+        total = len(future_to_index)
+        current = 0
+        for future in concurrent.futures.as_completed(future_to_index):
+            current += 1
+            percent = int((current / total) * 100)
+            sys.stdout.write(f"Downloading index data: {percent}%\r")
+            sys.stdout.flush()
+            try:
+                df_temp = future.result()
+                if not df_temp.empty:
+                    all_index_df = pd.concat([all_index_df, df_temp], ignore_index=True)
+            except Exception as e:
+                print(f"Error downloading index {future_to_index[future]}: {e}")
+        sys.stdout.write("\nIndex data download complete.\n")
+    
+    if all_index_df.empty:
+        print("No index data downloaded.")
+        return None
+    
+    all_index_df.drop_duplicates(subset=['Index', 'Date'], inplace=True)
     return all_index_df
