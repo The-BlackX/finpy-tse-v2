@@ -65,6 +65,9 @@ def get_marketwatch_me(output="dataframe", filename="MarketWatch", add_timestamp
     # Add Trade_Type
     final_df['Trade_Type'] = final_df['Symbol'].apply(lambda x: 'تابلو' if (not x[-1].isdigit() or x in ['انرژی1', 'انرژی2', 'انرژی3'])
                                                      else ('بلوکی' if x[-1] == '2' else ('عمده' if x[-1] == '4' else ('جبرانی' if x[-1] == '3' else 'تابلو'))))
+    
+    # Add Download column
+    final_df['Download'] = jdatetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
     # Set column order
     columns_order = [
@@ -73,7 +76,7 @@ def get_marketwatch_me(output="dataframe", filename="MarketWatch", add_timestamp
         'R_Buy_C', 'Co_Buy_C', 'R_Buy_Vol', 'Co_Buy_Vol', 'R_Sell_C', 'Co_Sell_C', 'R_Sell_Vol', 'Co_Sell_Vol',
         'Sell-No', 'Sell-Vol', 'Sell-Price', 'Buy-Price', 'Buy-Vol', 'Buy-No',
         'Time', 'Name', 'Market', 'Sector', 'Trade_Type', 'EPS', 'Base_Vol', 'Share_No',
-        'WEB-ID', 'Ticker-Code', 'Unk1', 'Unk2'
+        'WEB-ID', 'Ticker-Code', 'Unk1', 'Unk2', 'Download'
     ]
     final_df = final_df.reset_index(drop=False)[columns_order]
 
@@ -87,7 +90,7 @@ def get_marketwatch_me(output="dataframe", filename="MarketWatch", add_timestamp
         excel_filename = filename
         if add_timestamp:
             j_now = jdatetime.datetime.now()
-            timestamp = j_now.strftime('%Y-%m-%d_%H-%M-%S')  # e.g., 1404-01-20_14-20-38
+            timestamp = j_now.strftime('%Y-%m-%d_%H-%M-%S')
             excel_filename = f"{filename}_{timestamp}"
         
         excel_file = os.path.join(save_path, f"{excel_filename}.xlsx")
