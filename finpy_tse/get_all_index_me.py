@@ -1,7 +1,3 @@
-import os
-import sys
-import time
-import concurrent.futures
 import pandas as pd
 import requests
 import jdatetime
@@ -45,7 +41,6 @@ weekday_mapping = {
 def convert_to_persian_weekday(eng_weekday):
     return weekday_mapping.get(eng_weekday, eng_weekday)
 
-# Fetch and process index data with retry mechanism
 def fetch_index_data_to_dataframe(web_id, index_name):
     max_retries = 3
     for attempt in range(max_retries):
@@ -108,56 +103,14 @@ def fetch_index_data_to_dataframe(web_id, index_name):
             time.sleep(5)
     return pd.DataFrame()
 
-# Main function to get all indices
-def get_all_index_me(save_mode="dataframe"):
+def get_all_index_me():
     """
-    Fetch all index data and optionally save to Excel.
-    :param save_mode: "dataframe" (default) or "excel" (returns DataFrame and saves to Excel)
+    Fetch all index data sequentially and return as a DataFrame.
     :return: DataFrame with all index data
     """
-    start_time = time.time()
-    
     all_index_df = pd.DataFrame()
-    max_workers = min(3, len(sector_list))
-    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
-        future_to_index = {
-            executor.submit(fetch_index_data_to_dataframe, web_id, index_name): index_name
-            for index_name, web_id in zip(sector_list, sector_web_id)
-        }
-        total = len(future_to_index)
-        current = 0
-        for future in concurrent.futures.as_completed(future_to_index):
-            current += 1
-            percent = int((current / total) * 100)
-            sys.stdout.write(f"Downloading index data: {percent}%\r")
-            sys.stdout.flush()
-            try:
-                df_temp = future.result()
-                if not df_temp.empty:
-                    all_index_df = pd.concat([all_index_df, df_temp], ignore_index=True)
-            except Exception as e:
-                print(f"Error downloading index {future_to_index[future]}: {e}")
-        sys.stdout.write("\nIndex data download complete.\n")
-    
-    all_index_df.drop_duplicates(subset=['Index', 'Date'], inplace=True)
-    
-    if all_index_df.empty:
-        print("No index data downloaded.")
-        return None
-    
-    sys.stdout.write(f"Latest date in data: {all_index_df['Date'].max()}\n")
-    
-    if save_mode == "excel":
-        output_path = os.path.join(os.path.dirname(__file__), "indices_data.xlsx")
-        all_index_df.to_excel(output_path, index=False, engine='openpyxl')
-        sys.stdout.write(f"Data saved to {output_path}\n")
-    
-    end_time = time.time()
-    sys.stdout.write(f"Total execution time: {end_time - start_time:.2f} seconds\n")
-    
+    for index_name, web_id in zip(sector_list, sector_web_id):
+        df_temp = fetch_index_data_to_dataframe(web_id, index_name)
+        if not df_temp.empty:
+            all_index_df = pd.concat([all_index_df, df_temp], ignore_index=True)
     return all_index_df
-
-if __name__ == "__main__":
-    df = get_all_index_me(save_mode="excel")
-    if df is not None:
-        print("Returned DataFrame shape:", df.shape)
