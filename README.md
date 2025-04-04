@@ -414,3 +414,55 @@ fpy.Get_USD_RIAL(
     show_weekday=False,
     double_date=False)
 ```
+
+
+
+
+# Finpy-TSE-v2-me
+
+## توضیحات پارامترهای تابع‌ها
+
+### 1. تابع `get_marketwatch_me`
+این تابع داده‌های خام مارکت‌واچ رو از بورس تهران می‌گیره.
+
+- **پارامترها**:
+  - `output` (رشته): نوع خروجی تابع. می‌تونه `"dataframe"` (فقط دیتافریم) یا `"excel"` (دیتافریم + ذخیره اکسل) باشه.  
+    - **پیش‌فرض**: `"dataframe"`
+  - `filename` (رشته): اسم پایه فایل اکسل اگه بخوای ذخیره کنه.  
+    - **پیش‌فرض**: `"MarketWatch"`
+  - `add_timestamp` (بولین): اگه `True` باشه، تاریخ و ساعت شمسی به اسم فایل اضافه می‌شه (مثل `1404-01-20_14-20-38`).  
+    - **پیش‌فرض**: `False`
+  - `save_path` (رشته): مسیر ذخیره فایل اکسل. اگه چیزی ندی، توی پوشه فعلی ذخیره می‌شه.  
+    - **پیش‌فرض**: `None` (یعنی مسیر فعلی که فایل اجرا می‌شه)
+
+- **خروجی**: یه دیتافریم با 38 ستون (مثل `Symbol`, `Open`, `Close`, `Volume`, و غیره).
+
+- **مثال**:
+  ```python
+  from finpy_tse import get_marketwatch_me
+  df = get_marketwatch_me(output="excel", add_timestamp=True, save_path="...")
+  print(df.head())
+
+### 2. تابع `get_orderbook_me`
+این تابع داده‌های خام اُردر بوک رو با همه عمق‌ها (1 تا 5) می‌گیره.
+
+- **پارامترها**:
+  - `output` (رشته): نوع خروجی تابع. می‌تونه `"dataframe"` (فقط دیتافریم) یا `"excel"` (دیتافریم + ذخیره اکسل) باشه.  
+    - **پیش‌فرض**: `"dataframe"`
+  - `filename` (رشته): اسم پایه فایل اکسل اگه بخوای ذخیره کنه.  
+    - **پیش‌فرض**: `"OrderBook"`
+  - `add_timestamp` (بولین): اگه `True` باشه، تاریخ و ساعت شمسی به اسم فایل اضافه می‌شه (مثل `1404-01-20_14-20-38`).  
+    - **پیش‌فرض**: `False`
+  - `save_path` (رشته): مسیر ذخیره فایل اکسل. اگه چیزی ندی، توی پوشه فعلی ذخیره می‌شه.  
+    - **پیش‌فرض**: `None` (یعنی مسیر فعلی که فایل اجرا می‌شه)
+
+- **خروجی**: یه دیتافریم با 9 ستون (`WEB-ID`, `Symbol`, `OB-Depth`, `Sell-Non`, `Buy-No`, `Buy-Price`, `Sell-Price`, `Buy-Vol`, `Sell-Vol`).
+
+- **مثال**:
+  ```python
+  from finpy_tse import get_orderbook_me
+  df = get_orderbook_me(output="excel", add_timestamp=True, save_path="...")
+  print(df.head())
+
+
+
